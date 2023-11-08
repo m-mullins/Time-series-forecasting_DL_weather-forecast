@@ -1,5 +1,7 @@
 import requests
 import re
+import os
+import shutil
 
 class WeatherDataDownloader:
     def __init__(self, stations, years, months):
@@ -44,4 +46,31 @@ class WeatherDataDownloader:
                     print(csv_url)
                     file_name = f"climate_hourly_{station}_{year}_{month}.csv"
                     self.download_weather_data_month(csv_url, file_name)
+        print("CSVs downloaded succesfully")
+
+    def move_to_raw_csv(self):
+
+        # Define the source directory where the files are located
+        source_directory = "."  # Current directory, change this to the appropriate path
+
+        # Define the target directory (raw_csv subfolder)
+        target_directory = os.path.join(source_directory, "raw_csv")
+
+        # Ensure the target directory exists, create it if not
+        if not os.path.exists(target_directory):
+            os.makedirs(target_directory)
+
+        # List all files in the source directory
+        files = os.listdir(source_directory)
+
+        # Loop through the files and move those that meet the criteria
+        for filename in files:
+            if filename.startswith("climate_hourly") and filename.endswith(".csv"):
+                source_path = os.path.join(source_directory, filename)
+                target_path = os.path.join(target_directory, filename)
+                shutil.move(source_path, target_path)
+                print(f"Moved: {filename} to raw_csv")
+
+        print("CSVs moved to raw_csv folder")
+
 
