@@ -91,8 +91,9 @@ class DataCleaner:
         # Update modified pickle file
         pkl_name = f"all_data_{str(stations[missing_station])}.pkl"
         csv_name = f"all_data_{str(stations[missing_station])}.csv"
-        df_list[missing_station].to_pickle(pkl_name)
-        df_list[missing_station].to_csv(pkl_name)
+        df_new = df_list[missing_station]
+        df_new.to_pickle(pkl_name)
+        df_new.to_csv(csv_name)
         source_path = os.path.join(".", pkl_name)
         target_path = os.path.join(".","pickles", pkl_name)
         shutil.move(source_path, target_path)
