@@ -12,6 +12,9 @@ class WeatherDataDownloader:
     def download_weather_data_month(self, url, save_path=None):
         # Bulk download weather data from the canadian climate weather website
         # Data is downloaded for 1 station for 1 month and with the hourly format
+        # Regular download website: https://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=51157
+        # Bulk download website: https://collaboration.cmc.ec.gc.ca/cmc/climate/Get_More_Data_Plus_de_donnees/
+
 
         try:
             # Send an HTTP GET request to the URL
