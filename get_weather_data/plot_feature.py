@@ -13,12 +13,14 @@ for file in files:
     df_list.append(df)
 
 # print(df_list)
+feature_list = ['Date/Time (LST)','Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
+feature = feature_list[1]
 
 # Plot
 for index in range(3):
-    plt.plot(df_list[index]['Date/Time (LST)'][:1000], df_list[index]['Precip. Amount (mm)'][:1000], label=f'DataFrame {index+1}')
-plt.xlabel('Date/Time (LST)')
-plt.ylabel('Precip. Amount (mm)')
-plt.title('Precipitation Over Time')
+    plt.plot(df_list[index][feature_list[0]][:1000], df_list[index][feature][:1000], label=f'DataFrame {index+1}')
+plt.xlabel(feature_list[0])
+plt.ylabel(feature)
+plt.title(feature + ' Over Time')
 plt.legend()
 plt.show()
