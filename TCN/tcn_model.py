@@ -1,6 +1,8 @@
 import torch.nn as nn
 from torch.nn.utils.parametrizations import weight_norm
 
+# For original implementation: https://github.com/locuslab/TCN/blob/master/TCN/adding_problem/add_test.py
+
 
 class Crop(nn.Module):
     # Class used for padding time-series in the causal convolution operation
