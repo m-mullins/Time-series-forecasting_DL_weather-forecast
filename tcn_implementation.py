@@ -14,10 +14,10 @@ from LSTM.lstm_model import LSTM
 
 # Station and feature that we want to forecast
 stations = [30165,48374,49608]
-STATION_FORCASTED = 0
+STATION_FORECASTED = 0
 feature_list = ['Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
 FEATURE_FORECASTED = 0
-selected_feature = len(feature_list)*STATION_FORCASTED+FEATURE_FORECASTED
+selected_feature = len(feature_list)*STATION_FORECASTED+FEATURE_FORECASTED
 num_features = len(stations) * len(feature_list)
 
 # Context and forecast length# 
@@ -25,12 +25,13 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-epochs = 150                        # Training epochs
+epochs = 300                        # Training epochs
 input_size = TS_PAST                # Context
 output_size = TS_FUTURE             # Forecast
 channel_sizes = [num_features]*5    # Temporal causal layer channels
 kernel_size = 5                     # Convolution kernel size
-dropout = .0                        # Dropout
+dropout = .3                        # Dropout
+learning_rate = 0.005               # Learning rate
 
 # Import time-series from stored pickles
 df_list = []
@@ -96,7 +97,7 @@ model = TCN(**model_params)
 # model = LSTM(TS_FUTURE,num_features,2,1)
 
 # Define optimizer and loss functions
-optimizer   = torch.optim.Adam(params = model.parameters(), lr = .005)
+optimizer   = torch.optim.Adam(params = model.parameters(), lr = learning_rate)
 mse_loss    = torch.nn.MSELoss()
 
 # Training
@@ -150,6 +151,7 @@ plt.show()
 
 # Load best trained model
 best_model = TCN(**model_params)
+# best_model = LSTM(TS_FUTURE,num_features,2,1)
 best_model.eval()
 best_model.load_state_dict(best_params)
 
@@ -182,6 +184,26 @@ figure_path = os.path.join(plot_results_directory, "TCN_predictions.png")
 plt.savefig(figure_path)
 plt.show()
 
+# Save parameters and results to csv
+csv_file_path = os.path.join(plot_results_directory, "parameter_iterations.csv")
+# Check if the CSV file exists
+if not os.path.isfile(csv_file_path):
+    # If the file does not exist, create a new DataFrame
+    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'epochs', 'learning_rate', 'channel_sizes', 'kernel_size', 'dropout', 'tcn_mse_loss'])
+else:
+    # If the file exists, load the existing DataFrame
+    df_params_iter = pd.read_csv(csv_file_path)
+new_row = {'STATION_FORECASTED': STATION_FORECASTED,
+           'selected_feature': selected_feature,
+           'epochs': epochs,
+           'learning_rate': learning_rate,
+           'channel_sizes': channel_sizes,
+           'kernel_size': kernel_size,
+           'dropout': dropout,
+           'tcn_mse_loss': tcn_mse_loss}
+df_params_iter = pd.concat([df_params_iter, pd.DataFrame([new_row])], ignore_index=True)
+df_params_iter.to_csv(csv_file_path, index=False)
+
 # Plot prediction and context
 plt.figure(figsize=(10,6)) #plotting
 plt.title('TCN predictions with context')
@@ -198,8 +220,9 @@ plt.ylabel(f"{feature_list[selected_feature%5]}")
 plt.xlabel("Time")
 plt.legend()
 figure_path = os.path.join(plot_results_directory, "TCN_predictions_context.png")
+text_content = '\n'.join([f'{key}: {value}' for key, value in new_row.items()])
+plt.text(0.05, 0.05, text_content, transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.8), verticalalignment='bottom', horizontalalignment='left')
 plt.savefig(figure_path)
 plt.show()
-
 
 print("Done")

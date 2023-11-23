@@ -1,3 +1,4 @@
 *.pyc
 /raw_csv/
 TCN_TEST
+TCN/Results/
