@@ -25,12 +25,12 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-epochs = 300                        # Training epochs
+epochs = 250                        # Training epochs
 input_size = TS_PAST                # Context
 output_size = TS_FUTURE             # Forecast
-channel_sizes = [num_features]*5    # Temporal causal layer channels
+channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
 kernel_size = 5                     # Convolution kernel size
-dropout = .3                        # Dropout
+dropout = .2                        # Dropout
 learning_rate = 0.005               # Learning rate
 
 # Import time-series from stored pickles
@@ -43,6 +43,7 @@ for file in files:
     df_list.append(df)
 nb_stations = len(files)
 df = pd.concat(df_list,axis=1)
+df = df.iloc[40000:60000,:] # crop df to lower calc time
 
 # Preprocessing data with z-score normalization
 z_mean = df.mean()
@@ -207,7 +208,7 @@ df_params_iter.to_csv(csv_file_path, index=False)
 # Plot prediction and context
 plt.figure(figsize=(10,6)) #plotting
 plt.title('TCN predictions with context')
-start_plot = 2500
+start_plot = len(y_arr_test) - 2*TS_PAST
 y = df.iloc[:,selected_feature]
 y = y[-len(y_arr_test):]
 y = y * z_std[selected_feature] + z_mean[selected_feature]  # Remove z-score normalization
