@@ -98,12 +98,34 @@ class DataCleaner:
         target_path = os.path.join(".","pickles", pkl_name)
         shutil.move(source_path, target_path)
 
+    def check_missing_col(self,stations):
+        # Check for missing data in columns
 
+        # Read pickles
+        df_list = []
+        files = os.listdir(os.path.join(".", "pickles"))
+        for file in files:
+            target_file = ".\\pickles\\" + file
+            df = pd.read_pickle(target_file)
+            df_list.append(df)
+
+        # Check for empty cells
+        for station in range(len(stations)):
+            print(f"\nStation {stations[station]} dataframe")
+            print(df_list[station].head())
+            print(f"\nCheck for empty cells: {stations[station]}")
+            print(df_list[station].isnull().any())
+
+
+# Run this script to clean data and concat to clean_csv and pkl
 # Concat and clean data
 stations = [30165,48374,49608]
 for station in stations:
     clean_data = DataCleaner(station)
     clean_data.csvs_to_df()
+
+# Check for empty columns
+clean_data.check_missing_col(stations)
 
 # Fill missing data with average data in 2 other stations
 clean_data.fill_missing_col(stations,[0,1],2,"Precip. Amount (mm)")
