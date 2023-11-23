@@ -44,7 +44,9 @@ nb_stations = len(files)
 df = pd.concat(df_list,axis=1)
 
 # Preprocessing data with z-score normalization
-df = (df - df.mean()) / df.std()
+z_mean = df.mean()
+z_std = df.std()
+df = (df - z_mean) / z_std
 
 # Feed context and prediction results to the model (adding another dimension)
 x_arr,y_arr = split_sequences(df,df.iloc[:,selected_feature],TS_PAST, TS_FUTURE)
@@ -90,7 +92,7 @@ model_params = {
     'dropout':      dropout
 }
 model = TCN(**model_params)
-print(model)
+# print(model)
 # model = LSTM(TS_FUTURE,num_features,2,1)
 
 # Define optimizer and loss functions
@@ -141,30 +143,63 @@ plt.plot(validation_loss, label = 'validation')
 plt.ylabel("Loss")
 plt.xlabel("Epoch")
 plt.legend()
+plot_results_directory = os.path.dirname(os.path.abspath(__file__)) + "\\TCN\\Results"
+figure_path = os.path.join(plot_results_directory, "Training_progress.png")
+plt.savefig(figure_path)
 plt.show()
-# plt.savefig("\TCN\Results\Training progress.png")
 
-# best_model = TCN(**model_params)
-# best_model.eval()
-# best_model.load_state_dict(best_params)
+# Load best trained model
+best_model = TCN(**model_params)
+best_model.eval()
+best_model.load_state_dict(best_params)
 
-# tcn_prediction = best_model(x_test)
+# Calculate test loss
+tcn_prediction = best_model(x_test)
+tcn_mse_loss = round(mse_loss(tcn_prediction, y_test).item(), 4)
+print(f"TCN mse loss: {tcn_mse_loss}")
+
+# Test model
+tcn_prediction = best_model(x_test[-1].unsqueeze(0))
+tcn_prediction = tcn_prediction.detach().numpy()
+tcn_prediction = tcn_prediction * z_std[selected_feature] + z_mean[selected_feature]    # Remove z-score normalization
+tcn_prediction = tcn_prediction[0].tolist()
 # dummy_prediction = Dummy()(x_test)
-
-# tcn_mse_loss = round(mse_loss(tcn_prediction, y_test).item(), 4)
 # dummy_mse_loss = round(mse_loss(dummy_prediction, y_test).item(), 4)
 
-# plt.title(f'Test| TCN: {tcn_mse_loss}; Dummy: {dummy_mse_loss}')
-# plt.plot(
-#     ts_int(
-#         tcn_prediction.view(-1).tolist(),
-#         ts[-test_len:, 0],
-#         start = ts[-test_len - 1, 0]
-#     ),
-#     label = 'tcn')
-# plt.plot(ts[-test_len - 1:, 0], label = 'real')
-# plt.legend()
-# plt.show()
-# plt.savefig("Model MSE loss.png")
+# Test target
+test_target = y_arr_test[-1,:]
+test_target = test_target * z_std[selected_feature] + z_mean[selected_feature]  # Remove z-score normalization
+test_target = test_target.tolist()
+
+# Plot prediction
+plt.plot(test_target, label="Actual Data")
+plt.plot(tcn_prediction, label="TCN Predictions")
+plt.title('TCN predictions')
+plt.ylabel(f"{feature_list[selected_feature%5]}")
+plt.xlabel("Time")
+plt.legend()
+figure_path = os.path.join(plot_results_directory, "TCN_predictions.png")
+plt.savefig(figure_path)
+plt.show()
+
+# Plot prediction and context
+plt.figure(figsize=(10,6)) #plotting
+plt.title('TCN predictions with context')
+start_plot = 2500
+y = df.iloc[:,selected_feature]
+y = y[-len(y_arr_test):]
+y = y * z_std[selected_feature] + z_mean[selected_feature]  # Remove z-score normalization
+a = [x for x in range(start_plot, len(y))]
+plt.plot(a, y[start_plot:], label='Actual data')
+c = [x for x in range(len(y)-TS_FUTURE, len(y))]
+plt.plot(c, tcn_prediction, label=f'One-shot multi-step prediction ({TS_FUTURE}h)')
+plt.axvline(x=len(y)-TS_FUTURE, c='r', linestyle='--')
+plt.ylabel(f"{feature_list[selected_feature%5]}")
+plt.xlabel("Time")
+plt.legend()
+figure_path = os.path.join(plot_results_directory, "TCN_predictions_context.png")
+plt.savefig(figure_path)
+plt.show()
+
 
 print("Done")
