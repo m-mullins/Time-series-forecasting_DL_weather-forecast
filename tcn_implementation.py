@@ -6,7 +6,7 @@ import os
 import torch
 import pandas as pd
 
-from TCN.dummy import Dummy
+# from TCN.dummy import Dummy
 from TCN.tcn_model import TCN
 from utilities.utilities import split_sequences
 from LSTM.lstm_model import LSTM
@@ -25,17 +25,17 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-epochs = 250                        # Training epochs
+epochs = 150                        # Training epochs
 input_size = TS_PAST                # Context
 output_size = TS_FUTURE             # Forecast
 channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
 kernel_size = 5                     # Convolution kernel size
-dropout = .2                        # Dropout
+dropout = .3                        # Dropout
 learning_rate = 0.005               # Learning rate
 
 # Import time-series from stored pickles
 df_list = []
-files = os.listdir(os.path.join(".", "pickles"))
+files = os.listdir(os.path.join(".", "data\\pickles"))
 for file in files:
     target_file = ".\\pickles\\" + file
     df = pd.read_pickle(target_file)
