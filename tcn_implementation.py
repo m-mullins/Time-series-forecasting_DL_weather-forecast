@@ -216,7 +216,7 @@ plt.plot(c, tcn_prediction, label=f'One-shot multi-step prediction ({TS_FUTURE}h
 plt.axvline(x=len(y)-TS_FUTURE, c='r', linestyle='--')
 plt.ylabel(f"{feature_list[selected_feature%5]}")
 plt.xlabel("Time")
-plt.legend()
+plt.legend(loc='upper left')
 figure_path = os.path.join(plot_results_directory, "TCN_predictions_context.png")
 text_content = '\n'.join([f'{key}: {value}' for key, value in new_row.items()])
 plt.text(0.05, 0.05, text_content, transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.8), verticalalignment='bottom', horizontalalignment='left')

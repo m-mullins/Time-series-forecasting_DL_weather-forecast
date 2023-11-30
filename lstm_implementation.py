@@ -6,9 +6,8 @@ import os
 import torch
 import pandas as pd
 
-from TCN.tcn_model import TCN
 from utilities.utilities import split_sequences
-from LSTM.lstm_model import LSTM,Bi_LSTM_old,BiLSTM
+from LSTM.lstm_model import LSTM,BiLSTM
 
 
 # Station and feature that we want to forecast
@@ -24,18 +23,15 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-epochs = 150                        # Training epochs
-# input_size = TS_PAST                # Context
-# output_size = TS_FUTURE             # Forecast
-# channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
-# kernel_size = 5                     # Convolution kernel size
-dropout = .2                        # Dropout
-learning_rate = 0.00001               # Learning rate
+list_lstms = ["LSTM","BiLSTM"]
+chosen_lstm = list_lstms[0]         # Choose which lstm structure to use
+epochs = 300                        # Training epochs
+dropout = .0                        # Dropout
+learning_rate = 0.005               # Learning rate
 num_classes =   TS_FUTURE
 input_size = num_features
-hidden_size = 2
+hidden_size = 16
 num_layers = 1
-# batch_size = 13900
 output_dim = TS_FUTURE
 
 # Import time-series from stored pickles
@@ -88,43 +84,30 @@ y_val   = torch.tensor(y_arr_val, dtype=torch.float32)
 y_test  = torch.tensor(y_arr_test, dtype=torch.float32)
 train_len = x_train.size()[0]
 print(f"\nTensor shapes (x):\n{x_train.shape}\n{x_val.shape}\n{x_test.shape}")
-print(f"\nTensor shapes (y):\n{y_train.shape}\n{y_val.shape}\n{y_test.shape}")
+print(f"\nTensor shapes (y):\n{y_train.shape}\n{y_val.shape}\n{y_test.shape}\n")
 
 # Initialize model
-# model_params = {
-#     'input_size':   input_size,
-#     'output_size':  output_size,
-#     'num_channels': channel_sizes,
-#     'kernel_size':  kernel_size,
-#     'dropout':      dropout
-# }
-# model = TCN(**model_params)
-# print(model)
-# model_params = {
-#     'num_classes':  num_classes,
-#     'input_size':   input_size,
-#     'hidden_size':  hidden_size,
-#     'num_layers':   num_layers,
-# }
-# model = LSTM(**model_params)
-# model = LSTM(TS_FUTURE,num_features,2,1)
-# model_params = {
-#     'output_dim':   output_dim,
-#     'input_size':   input_size,
-#     'hidden_size':  hidden_size,
-#     'num_layers':   num_layers,
-#     'batch_size':   batch_size,
-# }
-# model = Bi_LSTM_old(**model_params)
-model_params = {
-    'num_classes':  num_classes,
-    'input_size':   input_size,
-    'hidden_size':  hidden_size,
-    'num_layers':   num_layers,
-    # 'dropout':      dropout,
-}
-model = BiLSTM(**model_params)
-print(model)
+if chosen_lstm == "LSTM":   # LSTM
+    model_params = {
+        'num_classes':  num_classes,
+        'input_size':   input_size,
+        'hidden_size':  hidden_size,
+        'num_layers':   num_layers,
+        'dropout':      dropout,
+    }
+    model = LSTM(**model_params)
+    # model = LSTM(TS_FUTURE,num_features,2,1)
+    print(model)
+else:                       # BiLSTM
+    model_params = {
+        'num_classes':  num_classes,
+        'input_size':   input_size,
+        'hidden_size':  hidden_size,
+        'num_layers':   num_layers,
+        'dropout':      dropout,
+    }
+    model = BiLSTM(**model_params)
+    print(model)
 
 # Define optimizer and loss functions
 optimizer   = torch.optim.Adam(params = model.parameters(), lr = learning_rate)
@@ -181,10 +164,11 @@ plt.savefig(figure_path)
 plt.show()
 
 # Load best trained model
-# best_model = TCN(**model_params)
-best_model = BiLSTM(**model_params)
-# best_model = LSTM(**model_params)
-# best_model = LSTM(TS_FUTURE,num_features,2,1)
+if chosen_lstm == "LSTM":   # LSTM
+    best_model = LSTM(**model_params)
+    # best_model = LSTM(TS_FUTURE,num_features,2,1)
+else:                       # BiLSTM
+    best_model = BiLSTM(**model_params)
 best_model.eval()
 best_model.load_state_dict(best_params)
 
@@ -220,12 +204,13 @@ csv_file_path = os.path.join(plot_results_directory, "parameter_iterations.csv")
 # Check if the CSV file exists
 if not os.path.isfile(csv_file_path):
     # If the file does not exist, create a new DataFrame
-    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'epochs', 'learning_rate', 'num_classes', 'input_size', 'hidden_size','num_layers', 'lstm_mse_loss'])
+    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'model_type', 'epochs', 'learning_rate', 'num_classes', 'input_size', 'hidden_size','num_layers', 'lstm_mse_loss'])
 else:
     # If the file exists, load the existing DataFrame
     df_params_iter = pd.read_csv(csv_file_path)
 new_row = {'STATION_FORECASTED': STATION_FORECASTED,
            'selected_feature': selected_feature,
+           'model_type' : chosen_lstm,
            'epochs': epochs,
            'learning_rate': learning_rate,
            'num_classes':   num_classes,
@@ -250,7 +235,7 @@ plt.plot(c, lstm_prediction, label=f'One-shot multi-step prediction ({TS_FUTURE}
 plt.axvline(x=len(y)-TS_FUTURE, c='r', linestyle='--')
 plt.ylabel(f"{feature_list[selected_feature%5]}")
 plt.xlabel("Time")
-plt.legend()
+plt.legend(loc='upper left')
 figure_path = os.path.join(plot_results_directory, "LSTM_predictions_context.png")
 text_content = '\n'.join([f'{key}: {value}' for key, value in new_row.items()])
 plt.text(0.05, 0.05, text_content, transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.8), verticalalignment='bottom', horizontalalignment='left')
