@@ -8,7 +8,7 @@ import pandas as pd
 
 from TCN.tcn_model import TCN
 from utilities.utilities import split_sequences
-from LSTM.lstm_model import LSTM
+from LSTM.lstm_model import LSTM,Bi_LSTM_old,BiLSTM
 
 
 # Station and feature that we want to forecast
@@ -25,12 +25,18 @@ TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
 epochs = 150                        # Training epochs
-input_size = TS_PAST                # Context
-output_size = TS_FUTURE             # Forecast
-channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
-kernel_size = 5                     # Convolution kernel size
-dropout = .3                        # Dropout
-learning_rate = 0.005               # Learning rate
+# input_size = TS_PAST                # Context
+# output_size = TS_FUTURE             # Forecast
+# channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
+# kernel_size = 5                     # Convolution kernel size
+dropout = .2                        # Dropout
+learning_rate = 0.00001               # Learning rate
+num_classes =   TS_FUTURE
+input_size = num_features
+hidden_size = 2
+num_layers = 1
+# batch_size = 13900
+output_dim = TS_FUTURE
 
 # Import time-series from stored pickles
 df_list = []
@@ -42,7 +48,7 @@ for file in files:
     df_list.append(df)
 nb_stations = len(files)
 df = pd.concat(df_list,axis=1)
-df = df.iloc[40000:60000,:] # crop df to lower calc time
+df = df.iloc[30000:50000,:] # crop df to lower calc time
 
 # Preprocessing data with z-score normalization
 z_mean = df.mean()
@@ -85,16 +91,40 @@ print(f"\nTensor shapes (x):\n{x_train.shape}\n{x_val.shape}\n{x_test.shape}")
 print(f"\nTensor shapes (y):\n{y_train.shape}\n{y_val.shape}\n{y_test.shape}")
 
 # Initialize model
-model_params = {
-    'input_size':   input_size,
-    'output_size':  output_size,
-    'num_channels': channel_sizes,
-    'kernel_size':  kernel_size,
-    'dropout':      dropout
-}
-model = TCN(**model_params)
+# model_params = {
+#     'input_size':   input_size,
+#     'output_size':  output_size,
+#     'num_channels': channel_sizes,
+#     'kernel_size':  kernel_size,
+#     'dropout':      dropout
+# }
+# model = TCN(**model_params)
 # print(model)
+# model_params = {
+#     'num_classes':  num_classes,
+#     'input_size':   input_size,
+#     'hidden_size':  hidden_size,
+#     'num_layers':   num_layers,
+# }
+# model = LSTM(**model_params)
 # model = LSTM(TS_FUTURE,num_features,2,1)
+# model_params = {
+#     'output_dim':   output_dim,
+#     'input_size':   input_size,
+#     'hidden_size':  hidden_size,
+#     'num_layers':   num_layers,
+#     'batch_size':   batch_size,
+# }
+# model = Bi_LSTM_old(**model_params)
+model_params = {
+    'num_classes':  num_classes,
+    'input_size':   input_size,
+    'hidden_size':  hidden_size,
+    'num_layers':   num_layers,
+    # 'dropout':      dropout,
+}
+model = BiLSTM(**model_params)
+print(model)
 
 # Define optimizer and loss functions
 optimizer   = torch.optim.Adam(params = model.parameters(), lr = learning_rate)
@@ -115,6 +145,7 @@ for epoch in range(epochs):
 
     optimizer.zero_grad()   # Calculate gradient, manually setting to 0
     loss.backward()         # Calculate loss from loss function
+    # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)  # Adjust max_norm as needed
     optimizer.step()        # Improve from loss (backprop)
 
     # Calculate validation loss
@@ -144,27 +175,29 @@ plt.plot(validation_loss, label = 'validation')
 plt.ylabel("Loss")
 plt.xlabel("Epoch")
 plt.legend()
-plot_results_directory = os.path.dirname(os.path.abspath(__file__)) + "\\TCN\\Results"
+plot_results_directory = os.path.dirname(os.path.abspath(__file__)) + "\\LSTM\\Results"
 figure_path = os.path.join(plot_results_directory, "Training_progress.png")
 plt.savefig(figure_path)
 plt.show()
 
 # Load best trained model
-best_model = TCN(**model_params)
+# best_model = TCN(**model_params)
+best_model = BiLSTM(**model_params)
+# best_model = LSTM(**model_params)
 # best_model = LSTM(TS_FUTURE,num_features,2,1)
 best_model.eval()
 best_model.load_state_dict(best_params)
 
 # Calculate test loss
-tcn_prediction = best_model(x_test)
-tcn_mse_loss = round(mse_loss(tcn_prediction, y_test).item(), 4)
-print(f"TCN mse loss: {tcn_mse_loss}")
+lstm_prediction = best_model(x_test)
+lstm_mse_loss = round(mse_loss(lstm_prediction, y_test).item(), 4)
+print(f"LSTM mse loss: {lstm_mse_loss}")
 
 # Test model
-tcn_prediction = best_model(x_test[-1].unsqueeze(0))
-tcn_prediction = tcn_prediction.detach().numpy()
-tcn_prediction = tcn_prediction * z_std[selected_feature] + z_mean[selected_feature]    # Remove z-score normalization
-tcn_prediction = tcn_prediction[0].tolist()
+lstm_prediction = best_model(x_test[-1].unsqueeze(0))
+lstm_prediction = lstm_prediction.detach().numpy()
+lstm_prediction = lstm_prediction * z_std[selected_feature] + z_mean[selected_feature]    # Remove z-score normalization
+lstm_prediction = lstm_prediction[0].tolist()
 
 # Test target
 test_target = y_arr_test[-1,:]
@@ -173,12 +206,12 @@ test_target = test_target.tolist()
 
 # Plot prediction
 plt.plot(test_target, label="Actual Data")
-plt.plot(tcn_prediction, label="TCN Predictions")
-plt.title('TCN predictions')
+plt.plot(lstm_prediction, label="LSTM Predictions")
+plt.title('LSTM predictions')
 plt.ylabel(f"{feature_list[selected_feature%5]}")
 plt.xlabel("Time")
 plt.legend()
-figure_path = os.path.join(plot_results_directory, "TCN_predictions.png")
+figure_path = os.path.join(plot_results_directory, "LSTM_predictions.png")
 plt.savefig(figure_path)
 plt.show()
 
@@ -187,7 +220,7 @@ csv_file_path = os.path.join(plot_results_directory, "parameter_iterations.csv")
 # Check if the CSV file exists
 if not os.path.isfile(csv_file_path):
     # If the file does not exist, create a new DataFrame
-    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'epochs', 'learning_rate', 'channel_sizes', 'kernel_size', 'dropout', 'tcn_mse_loss'])
+    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'epochs', 'learning_rate', 'num_classes', 'input_size', 'hidden_size','num_layers', 'lstm_mse_loss'])
 else:
     # If the file exists, load the existing DataFrame
     df_params_iter = pd.read_csv(csv_file_path)
@@ -195,16 +228,17 @@ new_row = {'STATION_FORECASTED': STATION_FORECASTED,
            'selected_feature': selected_feature,
            'epochs': epochs,
            'learning_rate': learning_rate,
-           'channel_sizes': channel_sizes,
-           'kernel_size': kernel_size,
-           'dropout': dropout,
-           'tcn_mse_loss': tcn_mse_loss}
+           'num_classes':   num_classes,
+           'input_size':  input_size,
+           'hidden_size': hidden_size,
+           'num_layers':  num_layers,
+           'lstm_mse_loss': lstm_mse_loss}
 df_params_iter = pd.concat([df_params_iter, pd.DataFrame([new_row])], ignore_index=True)
 df_params_iter.to_csv(csv_file_path, index=False)
 
 # Plot prediction and context
 plt.figure(figsize=(10,6)) #plotting
-plt.title('TCN predictions with context')
+plt.title('LSTM predictions with context')
 start_plot = len(y_arr_test) - 2*TS_PAST
 y = df.iloc[:,selected_feature]
 y = y[-len(y_arr_test):]
@@ -212,12 +246,12 @@ y = y * z_std[selected_feature] + z_mean[selected_feature]  # Remove z-score nor
 a = [x for x in range(start_plot, len(y))]
 plt.plot(a, y[start_plot:], label='Actual data')
 c = [x for x in range(len(y)-TS_FUTURE, len(y))]
-plt.plot(c, tcn_prediction, label=f'One-shot multi-step prediction ({TS_FUTURE}h)')
+plt.plot(c, lstm_prediction, label=f'One-shot multi-step prediction ({TS_FUTURE}h)')
 plt.axvline(x=len(y)-TS_FUTURE, c='r', linestyle='--')
 plt.ylabel(f"{feature_list[selected_feature%5]}")
 plt.xlabel("Time")
 plt.legend()
-figure_path = os.path.join(plot_results_directory, "TCN_predictions_context.png")
+figure_path = os.path.join(plot_results_directory, "LSTM_predictions_context.png")
 text_content = '\n'.join([f'{key}: {value}' for key, value in new_row.items()])
 plt.text(0.05, 0.05, text_content, transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.8), verticalalignment='bottom', horizontalalignment='left')
 plt.savefig(figure_path)
