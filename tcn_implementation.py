@@ -150,9 +150,9 @@ plt.show()
 
 # Load best trained model
 best_model = TCN(**model_params)
+best_model.load_state_dict(best_params)
 torch.save(best_model.state_dict(), 'TCN\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
-best_model.load_state_dict(best_params)
 
 # Calculate test loss
 tcn_prediction = best_model(x_test)

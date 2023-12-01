@@ -100,10 +100,12 @@ if chosen_model == 'TCN':
     # Load the saved state_dict into the model
     best_model = TCN(**model_params)
     best_model.load_state_dict(torch.load('TCN\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt'))
+    best_model.eval()
 
 else:
     model_path = chosen_model + '\\' + str.lower(chosen_model) + '_trained_model_' + str(selected_feature) + '.pt'
     best_model = torch.load(model_path)
+    best_model.eval()
 
 # Calculate test loss
 mse_loss    = torch.nn.MSELoss()
@@ -153,7 +155,7 @@ plt.legend(loc='upper left')
 new_row = {'STATION_FORECASTED': STATION_FORECASTED,
            'selected_feature': selected_feature,
            'model_type' : chosen_model,
-           'lstm_mse_loss': model_mse_loss}
+           'mse_loss': model_mse_loss}
 figure_path = os.path.join(plot_results_directory, chosen_model + "_predictions_context.png")
 text_content = '\n'.join([f'{key}: {value}' for key, value in new_row.items()])
 plt.text(0.05, 0.05, text_content, transform=plt.gca().transAxes, bbox=dict(facecolor='white', alpha=0.8), verticalalignment='bottom', horizontalalignment='left')

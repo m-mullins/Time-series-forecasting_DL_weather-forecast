@@ -14,7 +14,7 @@ from LSTM.lstm_model import LSTM,BiLSTM
 stations = [30165,48374,49608]
 STATION_FORECASTED = 0
 feature_list = ['Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
-FEATURE_FORECASTED = 4
+FEATURE_FORECASTED = 0
 selected_feature = len(feature_list)*STATION_FORECASTED+FEATURE_FORECASTED
 num_features = len(stations) * len(feature_list)
 
@@ -169,9 +169,10 @@ if chosen_lstm == "LSTM":   # LSTM
     # best_model = LSTM(TS_FUTURE,num_features,2,1)
 else:                       # BiLSTM
     best_model = BiLSTM(**model_params)
+best_model.load_state_dict(best_params)
 torch.save(best_model,'LSTM\\lstm_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
-best_model.load_state_dict(best_params)
+
 
 # Calculate test loss
 lstm_prediction = best_model(x_test)
