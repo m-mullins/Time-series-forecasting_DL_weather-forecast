@@ -14,7 +14,7 @@ from LSTM.lstm_model import LSTM,BiLSTM
 stations = [30165,48374,49608]
 STATION_FORECASTED = 0
 feature_list = ['Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
-FEATURE_FORECASTED = 0
+FEATURE_FORECASTED = 4
 selected_feature = len(feature_list)*STATION_FORECASTED+FEATURE_FORECASTED
 num_features = len(stations) * len(feature_list)
 
@@ -25,12 +25,12 @@ TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 # Global nn parameters
 list_lstms = ["LSTM","BiLSTM"]
 chosen_lstm = list_lstms[0]         # Choose which lstm structure to use
-epochs = 300                        # Training epochs
+epochs = 120                        # Training epochs
 dropout = .0                        # Dropout
 learning_rate = 0.005               # Learning rate
 num_classes =   TS_FUTURE
 input_size = num_features
-hidden_size = 16
+hidden_size = 64
 num_layers = 1
 output_dim = TS_FUTURE
 
@@ -44,7 +44,7 @@ for file in files:
     df_list.append(df)
 nb_stations = len(files)
 df = pd.concat(df_list,axis=1)
-df = df.iloc[30000:50000,:] # crop df to lower calc time
+df = df.iloc[40000:60000,:] # crop df to lower calc time
 
 # Preprocessing data with z-score normalization
 z_mean = df.mean()
@@ -169,6 +169,7 @@ if chosen_lstm == "LSTM":   # LSTM
     # best_model = LSTM(TS_FUTURE,num_features,2,1)
 else:                       # BiLSTM
     best_model = BiLSTM(**model_params)
+torch.save(best_model,'LSTM\\lstm_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
 best_model.load_state_dict(best_params)
 

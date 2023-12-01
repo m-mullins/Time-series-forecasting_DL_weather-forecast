@@ -24,7 +24,7 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-epochs = 150                        # Training epochs
+epochs = 300                        # Training epochs
 input_size = TS_PAST                # Context
 output_size = TS_FUTURE             # Forecast
 channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
@@ -93,8 +93,7 @@ model_params = {
     'dropout':      dropout
 }
 model = TCN(**model_params)
-# print(model)
-# model = LSTM(TS_FUTURE,num_features,2,1)
+print(model)
 
 # Define optimizer and loss functions
 optimizer   = torch.optim.Adam(params = model.parameters(), lr = learning_rate)
@@ -151,7 +150,7 @@ plt.show()
 
 # Load best trained model
 best_model = TCN(**model_params)
-# best_model = LSTM(TS_FUTURE,num_features,2,1)
+torch.save(best_model.state_dict(), 'TCN\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
 best_model.load_state_dict(best_params)
 

@@ -1,4 +1,5 @@
 *.pyc
+*.pt
 data/raw_csv/
 TCN/Results/
 TCN/Archive
