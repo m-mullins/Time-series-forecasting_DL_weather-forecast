@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import csv
 
 def split_sequences(input_sequences, output_sequence, n_steps_in, n_steps_out):
     # Splits a multivariate input sequence into past and future samples
@@ -21,3 +22,26 @@ def split_sequences(input_sequences, output_sequence, n_steps_in, n_steps_out):
         X.append(seq_x), y.append(seq_y)
 
     return np.array(X), np.array(y)
+
+
+def update_results_in_csv(csv_file_path, chosen_model, feature_list, FEATURE_FORECASTED, model_mse_loss, model_mae_loss, model_r2_loss):
+    # Updates the MSE, MAE and R2 losses in the loss_results csv file for the given model and feature
+
+    # Read the existing CSV file into a DataFrame
+    df = pd.read_csv(csv_file_path)
+
+    # Replace spaces with underscores to create valid column names
+    chosen_model_no_space = chosen_model.replace(' ', '_')
+
+    # Find the index of the chosen feature in the feature list
+    chosen_feature_index = FEATURE_FORECASTED
+
+    # Update the values for the chosen model and feature
+    df.at[chosen_feature_index, f"{chosen_model_no_space}_MSE"] = round(model_mse_loss, 4)
+    df.at[chosen_feature_index, f"{chosen_model_no_space}_MAE"] = round(model_mae_loss, 4)
+    df.at[chosen_feature_index, f"{chosen_model_no_space}_R2"] = round(model_r2_loss, 4)
+
+    # Write the updated DataFrame back to the CSV file
+    df.to_csv(csv_file_path, index=False)
+
+    print(f"Results for {chosen_model} and {feature_list[chosen_feature_index]} updated in {csv_file_path}")

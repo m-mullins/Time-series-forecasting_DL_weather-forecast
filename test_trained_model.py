@@ -5,23 +5,25 @@ import matplotlib.pyplot as plt
 import os
 import torch
 import pandas as pd
+import csv
 
-from utilities.utilities import split_sequences
-from LSTM.lstm_model import LSTM,BiLSTM
+from utilities.utilities import split_sequences, update_results_in_csv
+from LSTM.lstm_model import LSTM
 from TCN.tcn_model import TCN
+from sklearn.metrics import mean_absolute_error, r2_score
 
 
 # Station and feature that we want to forecast
 stations = [30165,48374,49608]
 STATION_FORECASTED = 0
 feature_list = ['Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
-FEATURE_FORECASTED = 0
+FEATURE_FORECASTED = 4
 selected_feature = len(feature_list)*STATION_FORECASTED+FEATURE_FORECASTED
 num_features = len(stations) * len(feature_list)
 
 # Choose model
-model_list = ['TCN','LSTM']
-chosen_model = model_list[0]
+model_list = ['TCN','LSTM','GRU']
+chosen_model = model_list[1]
 
 # Context and forecast length# 
 TS_PAST     = 120   # Time steps to look into the past (context) [h]
@@ -68,7 +70,6 @@ print(f"\ny_arr shapes:\n{y_arr_train.shape}\n{y_arr_val.shape}\n{y_arr_test.sha
 # We want to feed 120 samples and predict the next 24 for 15 different features
 # Tensor shape sould be x_train(12264,120,15) and y_train(12264,24)
 # x[TS batch size,TS context, num features] and y[TS batch size,TS forecast]
-# https://charlieoneill.medium.com/predicting-the-price-of-bitcoin-with-multivariate-pytorch-lstms-695bc294130
 x_train = torch.tensor(x_arr_train, dtype=torch.float32)
 x_val   = torch.tensor(x_arr_val, dtype=torch.float32)
 x_test  = torch.tensor(x_arr_test, dtype=torch.float32)
@@ -107,11 +108,21 @@ else:
     best_model = torch.load(model_path)
     best_model.eval()
 
-# Calculate test loss
-mse_loss    = torch.nn.MSELoss()
-model_prediction = best_model(x_test)
-model_mse_loss = round(mse_loss(model_prediction, y_test).item(), 4)
-print(f"{chosen_model} mse loss: {model_mse_loss}")
+# Calculate MSE, MAE and R^2 score
+mse_loss            = torch.nn.MSELoss()
+model_prediction    = best_model(x_test)
+model_mse_loss      = round(mse_loss(model_prediction, y_test).item(), 4)
+mae_loss            = mean_absolute_error(y_test.cpu().detach().numpy(), model_prediction.cpu().detach().numpy())
+model_mae_loss      = round(mae_loss, 4)
+r2_loss             = r2_score(y_test.cpu().detach().numpy(), model_prediction.cpu().detach().numpy())
+model_r2_loss       = round(r2_loss, 4)
+print(f"{chosen_model} MSE loss: {model_mse_loss}")
+print(f"{chosen_model} MAE loss: {model_mae_loss}")
+print(f"{chosen_model} R^2 score: {model_r2_loss}")
+
+# Save losses to csv
+csv_file_path = 'loss_results.csv'
+update_results_in_csv(csv_file_path, chosen_model, feature_list, FEATURE_FORECASTED, model_mse_loss, model_mae_loss, model_r2_loss)
 
 # Test model
 model_prediction = best_model(x_test[-1].unsqueeze(0))
