@@ -1,5 +1,6 @@
 *.pyc
 *.pt
+*.png
 data/raw_csv/
 TCN/Results/
 TCN/Archive

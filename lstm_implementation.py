@@ -7,7 +7,7 @@ import torch
 import pandas as pd
 
 from utilities.utilities import split_sequences
-from LSTM.lstm_model import LSTM,BiLSTM
+from LSTM.lstm_model import LSTM
 
 
 # Station and feature that we want to forecast
@@ -23,9 +23,8 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-list_lstms = ["LSTM","BiLSTM"]
-chosen_lstm = list_lstms[0]         # Choose which lstm structure to use
-epochs = 120                        # Training epochs
+chosen_model = "LSTM"               # Choose which model structure to use
+epochs = 150                        # Training epochs
 dropout = .0                        # Dropout
 learning_rate = 0.005               # Learning rate
 num_classes =   TS_FUTURE
@@ -87,27 +86,15 @@ print(f"\nTensor shapes (x):\n{x_train.shape}\n{x_val.shape}\n{x_test.shape}")
 print(f"\nTensor shapes (y):\n{y_train.shape}\n{y_val.shape}\n{y_test.shape}\n")
 
 # Initialize model
-if chosen_lstm == "LSTM":   # LSTM
-    model_params = {
+model_params = {
         'num_classes':  num_classes,
         'input_size':   input_size,
         'hidden_size':  hidden_size,
         'num_layers':   num_layers,
         'dropout':      dropout,
     }
-    model = LSTM(**model_params)
-    # model = LSTM(TS_FUTURE,num_features,2,1)
-    print(model)
-else:                       # BiLSTM
-    model_params = {
-        'num_classes':  num_classes,
-        'input_size':   input_size,
-        'hidden_size':  hidden_size,
-        'num_layers':   num_layers,
-        'dropout':      dropout,
-    }
-    model = BiLSTM(**model_params)
-    print(model)
+model = LSTM(**model_params)
+print(model)
 
 # Define optimizer and loss functions
 optimizer   = torch.optim.Adam(params = model.parameters(), lr = learning_rate)
@@ -164,11 +151,7 @@ plt.savefig(figure_path)
 plt.show()
 
 # Load best trained model
-if chosen_lstm == "LSTM":   # LSTM
-    best_model = LSTM(**model_params)
-    # best_model = LSTM(TS_FUTURE,num_features,2,1)
-else:                       # BiLSTM
-    best_model = BiLSTM(**model_params)
+best_model = LSTM(**model_params)
 best_model.load_state_dict(best_params)
 torch.save(best_model,'LSTM\\lstm_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
@@ -212,7 +195,7 @@ else:
     df_params_iter = pd.read_csv(csv_file_path)
 new_row = {'STATION_FORECASTED': STATION_FORECASTED,
            'selected_feature': selected_feature,
-           'model_type' : chosen_lstm,
+           'model_type' : chosen_model,
            'epochs': epochs,
            'learning_rate': learning_rate,
            'num_classes':   num_classes,
