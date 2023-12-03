@@ -23,7 +23,7 @@ num_features = len(stations) * len(feature_list)
 
 # Choose model
 model_list = ['TCN','LSTM','GRU']
-chosen_model = model_list[1]
+chosen_model = model_list[0]
 
 # Context and forecast length# 
 TS_PAST     = 120   # Time steps to look into the past (context) [h]

@@ -16,7 +16,7 @@ class LSTM(nn.Module):
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=self.batch_first,
-            dropout=dropout,  # Added dropout parameter
+            dropout=dropout,
         )
         self.fc_1 = nn.Linear(hidden_size, 128)
         self.fc_2 = nn.Linear(128, num_classes)

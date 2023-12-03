@@ -6,4 +6,6 @@ TCN/Results/
 TCN/Archive
 LSTM/Results/
 LSTM/Archive
+GRU/Results/
+GRU/Archive
 test.py

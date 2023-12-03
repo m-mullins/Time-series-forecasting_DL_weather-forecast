@@ -5,10 +5,13 @@ import matplotlib.pyplot as plt
 import os
 import torch
 import pandas as pd
+import time
 
 from utilities.utilities import split_sequences
 from LSTM.lstm_model import LSTM
 
+# Record the start time
+start_time = time.time()
 
 # Station and feature that we want to forecast
 stations = [30165,48374,49608]
@@ -136,7 +139,14 @@ for epoch in range(epochs):
         diff = (y_train - prediction).view(-1).abs_().tolist()
         print(f'epoch {epoch}. train: {round(loss.item(), 4)}, '
               f'val: {round(val_loss.item(), 4)}')
-        
+
+# Record the end time
+end_time = time.time()
+
+# Calculate the elapsed time
+train_time = round(end_time - start_time,1)
+print(f"Execution time: {train_time} seconds")
+
 # Training progress
 plt.title('Training Progress')
 plt.yscale("log")
@@ -189,7 +199,7 @@ csv_file_path = os.path.join(plot_results_directory, "parameter_iterations.csv")
 # Check if the CSV file exists
 if not os.path.isfile(csv_file_path):
     # If the file does not exist, create a new DataFrame
-    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'model_type', 'epochs', 'learning_rate', 'num_classes', 'input_size', 'hidden_size','num_layers', 'lstm_mse_loss'])
+    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'model_type', 'epochs', 'learning_rate', 'num_classes', 'input_size', 'hidden_size','num_layers', 'train_time', 'lstm_mse_loss'])
 else:
     # If the file exists, load the existing DataFrame
     df_params_iter = pd.read_csv(csv_file_path)
@@ -202,6 +212,7 @@ new_row = {'STATION_FORECASTED': STATION_FORECASTED,
            'input_size':  input_size,
            'hidden_size': hidden_size,
            'num_layers':  num_layers,
+           'train_time' : train_time,
            'lstm_mse_loss': lstm_mse_loss}
 df_params_iter = pd.concat([df_params_iter, pd.DataFrame([new_row])], ignore_index=True)
 df_params_iter.to_csv(csv_file_path, index=False)
