@@ -29,9 +29,10 @@ TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 epochs = 300                        # Training epochs
 input_size = TS_PAST                # Context
 output_size = TS_FUTURE             # Forecast
-channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
-kernel_size = 5                     # Convolution kernel size
-dropout = .3                        # Dropout
+channel_sizes = [num_features]*3    # Temporal causal layer channels [num of features]*amount of filters per layer
+kernel_size = 4                     # Convolution kernel size
+dropout = .4                        # Dropout
+dilation = 2
 learning_rate = 0.005               # Learning rate
 
 # Import time-series from stored pickles
@@ -91,7 +92,8 @@ model_params = {
     'output_size':  output_size,
     'num_channels': channel_sizes,
     'kernel_size':  kernel_size,
-    'dropout':      dropout
+    'dropout':      dropout,
+    'dilation':     dilation
 }
 model = TCN(**model_params)
 print(model)
@@ -194,7 +196,7 @@ csv_file_path = os.path.join(plot_results_directory, "parameter_iterations.csv")
 # Check if the CSV file exists
 if not os.path.isfile(csv_file_path):
     # If the file does not exist, create a new DataFrame
-    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'epochs', 'learning_rate', 'channel_sizes', 'kernel_size', 'dropout', 'train_time', 'tcn_mse_loss'])
+    df_params_iter = pd.DataFrame(columns=['STATION_FORECASTED', 'selected_feature', 'epochs', 'learning_rate', 'channel_sizes', 'kernel_size', 'dropout', 'dilation', 'train_time', 'tcn_mse_loss'])
 else:
     # If the file exists, load the existing DataFrame
     df_params_iter = pd.read_csv(csv_file_path)
@@ -205,6 +207,7 @@ new_row = {'STATION_FORECASTED': STATION_FORECASTED,
            'channel_sizes': channel_sizes,
            'kernel_size': kernel_size,
            'dropout': dropout,
+           'dilation': dilation,
            'train_time' : train_time,
            'tcn_mse_loss': tcn_mse_loss}
 df_params_iter = pd.concat([df_params_iter, pd.DataFrame([new_row])], ignore_index=True)

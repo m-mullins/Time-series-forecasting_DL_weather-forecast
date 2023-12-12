@@ -17,7 +17,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 stations = [30165,48374,49608]
 STATION_FORECASTED = 0
 feature_list = ['Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
-FEATURE_FORECASTED = 0
+FEATURE_FORECASTED = 4
 selected_feature = len(feature_list)*STATION_FORECASTED+FEATURE_FORECASTED
 num_features = len(stations) * len(feature_list)
 
@@ -90,9 +90,9 @@ for chosen_model in chosen_models:
         epochs = 150                        # Training epochs
         input_size = TS_PAST                # Context
         output_size = TS_FUTURE             # Forecast
-        channel_sizes = [num_features]*5    # Temporal causal layer channels [num of features]*amount of filters per layer
-        kernel_size = 5                     # Convolution kernel size
-        dropout = .3                        # Dropout
+        channel_sizes = [num_features]*3    # Temporal causal layer channels [num of features]*amount of filters per layer
+        kernel_size = 4                     # Convolution kernel size
+        dropout = .4                        # Dropout
         learning_rate = 0.005               # Learning rate
 
         model_params = {
@@ -173,7 +173,7 @@ plt.ylabel(f"{feature_list[selected_feature%5]}")
 plt.xlabel("Time")
 plt.legend(loc='upper left')
 # Add parameters as text box in plot
-new_row = {'STATION_FORECASTED': STATION_FORECASTED,
+new_row = {'STATION_FORECASTED': stations[STATION_FORECASTED],
            'selected_feature': selected_feature,
            'tcn_mse_loss': mse_losses[0],
            'lstm_mse_loss': mse_losses[1],

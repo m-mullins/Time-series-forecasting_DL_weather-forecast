@@ -53,17 +53,18 @@ class TemporalCausalLayer(nn.Module):
 class TemporalConvolutionNetwork(nn.Module):
     # Implementation of TCN with stack of TC layers and introducing dilation
 
-    def __init__(self, num_inputs, num_channels, kernel_size = 2, dropout = 0.2):
+    def __init__(self, num_inputs, num_channels, kernel_size = 2, dropout = 0.2, dilation = 2):
         super(TemporalConvolutionNetwork, self).__init__()
         layers = []
         num_levels = len(num_channels)
+        dilation_rate = dilation
         tcl_param = {
             'kernel_size': kernel_size,
             'stride':      1,
             'dropout':     dropout
         }
         for i in range(num_levels):
-            dilation = 2**i
+            dilation = dilation_rate**i
             in_ch = num_inputs if i == 0 else num_channels[i - 1]
             out_ch = num_channels[i]
             tcl_param['dilation'] = dilation
@@ -78,9 +79,9 @@ class TemporalConvolutionNetwork(nn.Module):
 
 class TCN(nn.Module):
 
-    def __init__(self, input_size, output_size, num_channels, kernel_size, dropout):
+    def __init__(self, input_size, output_size, num_channels, kernel_size, dropout, dilation):
         super(TCN, self).__init__()
-        self.tcn = TemporalConvolutionNetwork(input_size, num_channels, kernel_size = kernel_size, dropout = dropout)
+        self.tcn = TemporalConvolutionNetwork(input_size, num_channels, kernel_size = kernel_size, dropout = dropout, dilation = dilation)
         self.linear = nn.Linear(num_channels[-1], output_size)
 
     def forward(self, x):
