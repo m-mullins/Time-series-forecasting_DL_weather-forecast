@@ -163,7 +163,7 @@ plt.show()
 # Load best trained model
 best_model = LSTM(**model_params)
 best_model.load_state_dict(best_params)
-torch.save(best_model,'LSTM\\lstm_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
+torch.save(best_model,'LSTM\\trained_models\\lstm_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
 
 

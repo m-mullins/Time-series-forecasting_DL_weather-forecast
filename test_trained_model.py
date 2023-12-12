@@ -87,12 +87,13 @@ for chosen_model in chosen_models:
     # Load model
     if chosen_model == 'TCN':
         # Global nn parameters
-        epochs = 150                        # Training epochs
+        epochs = 300                        # Training epochs
         input_size = TS_PAST                # Context
         output_size = TS_FUTURE             # Forecast
         channel_sizes = [num_features]*3    # Temporal causal layer channels [num of features]*amount of filters per layer
         kernel_size = 4                     # Convolution kernel size
         dropout = .4                        # Dropout
+        dilation = 2                        # Dilation rate
         learning_rate = 0.005               # Learning rate
 
         model_params = {
@@ -100,15 +101,16 @@ for chosen_model in chosen_models:
             'output_size':  output_size,
             'num_channels': channel_sizes,
             'kernel_size':  kernel_size,
-            'dropout':      dropout
+            'dropout':      dropout,
+            'dilation':     dilation
         }
         # Load the saved state_dict into the model
         best_model = TCN(**model_params)
-        best_model.load_state_dict(torch.load('TCN\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt'))
+        best_model.load_state_dict(torch.load('TCN\\trained_models\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt'))
         best_model.eval()
 
     else:
-        model_path = chosen_model + '\\' + str.lower(chosen_model) + '_trained_model_' + str(selected_feature) + '.pt'
+        model_path = chosen_model + '\\trained_models\\' + str.lower(chosen_model) + '_trained_model_' + str(selected_feature) + '.pt'
         best_model = torch.load(model_path)
         best_model.eval()
 

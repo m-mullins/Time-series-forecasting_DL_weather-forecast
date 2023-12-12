@@ -162,7 +162,7 @@ plt.show()
 # Load best trained model
 best_model = GRU(**model_params)
 best_model.load_state_dict(best_params)
-torch.save(best_model,'GRU\\gru_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
+torch.save(best_model,'GRU\\trained_models\\gru_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
 
 

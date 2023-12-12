@@ -32,7 +32,7 @@ output_size = TS_FUTURE             # Forecast
 channel_sizes = [num_features]*3    # Temporal causal layer channels [num of features]*amount of filters per layer
 kernel_size = 4                     # Convolution kernel size
 dropout = .4                        # Dropout
-dilation = 2
+dilation = 2                        # Dilation rate
 learning_rate = 0.005               # Learning rate
 
 # Import time-series from stored pickles
@@ -161,7 +161,7 @@ plt.show()
 # Load best trained model
 best_model = TCN(**model_params)
 best_model.load_state_dict(best_params)
-torch.save(best_model.state_dict(), 'TCN\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
+torch.save(best_model.state_dict(), 'TCN\\trained_models\\tcn_trained_model_' + str(FEATURE_FORECASTED) + '.pt')
 best_model.eval()
 
 # Calculate test loss
