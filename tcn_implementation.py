@@ -26,7 +26,7 @@ TS_PAST     = 120   # Time steps to look into the past (context) [h]
 TS_FUTURE   = 24    # Time steps to look into the future (forecast) [h]
 
 # Global nn parameters
-epochs = 300                        # Training epochs
+epochs = 150                        # Training epochs
 input_size = TS_PAST                # Context
 output_size = TS_FUTURE             # Forecast
 channel_sizes = [num_features]*3    # Temporal causal layer channels [num of features]*amount of filters per layer

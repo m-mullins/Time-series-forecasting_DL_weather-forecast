@@ -1,4 +1,5 @@
 # Time Series Forecasting with Deep Learning for Weather Forecasting
+by Mathieu Mullins
 
 ## Introduction
 This repository contains code for a time series forecasting model that compares deep learning models (LSTM, GRU, TCN) to predict weather conditions. The goal is to provide accurate forecasts based on historical weather data from the Government of Canada's historical weather data.

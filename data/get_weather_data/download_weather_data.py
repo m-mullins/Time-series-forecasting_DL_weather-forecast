@@ -1,4 +1,5 @@
 from weather_data_downloader import WeatherDataDownloader
+# Download historical weather data and store in pkl and csv files
 
 # Liste des stations étudiées [Montréal/PET,Montréal/St-Hubert,Montréal/Mirabel]
 stations = [30165,48374,49608]

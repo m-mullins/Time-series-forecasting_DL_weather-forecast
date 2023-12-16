@@ -12,12 +12,13 @@ from LSTM.lstm_model import LSTM
 from TCN.tcn_model import TCN
 from sklearn.metrics import mean_absolute_error, r2_score
 
+# Script allows to test and compare all trained models
 
 # Station and feature that we want to forecast
 stations = [30165,48374,49608]
 STATION_FORECASTED = 0
 feature_list = ['Temp (degC)','Rel Hum (%)','Precip. Amount (mm)','Stn Press (kPa)','Wind Spd (km/h)']
-FEATURE_FORECASTED = 4
+FEATURE_FORECASTED = 0
 selected_feature = len(feature_list)*STATION_FORECASTED+FEATURE_FORECASTED
 num_features = len(stations) * len(feature_list)
 
