@@ -43,12 +43,12 @@ class DataCleaner:
         print(df_station.head())
 
         # Check for missing data and fill missing data
-        df_station.fillna(method='ffill', inplace=True)
+        # df_station.fillna(method='ffill', inplace=True)
         print(f"\nCheck for empty cells: {self.station}")
         print(df_station.isnull().any())
 
         # Send concatenated df to pickle and csv
-        pkl_name = f"all_data_{str(self.station)}.pkl"
+        pkl_name = f"all_data_{str(self.station)}_raw.pkl"
         df_station.to_pickle(pkl_name)
         df_station.to_csv(f"all_data_{str(self.station)}.csv")
         source_path = os.path.join(".", pkl_name)
